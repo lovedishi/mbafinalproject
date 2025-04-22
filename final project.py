@@ -88,14 +88,24 @@ elif section == "🎯 Movie Recommendation":
     else:
         filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
 
-    # Preprocessing step: Ensure 'combined_features' column has no NaN or empty values
+    # --- Clean and Preprocess combined_features ---
     filtered_df['combined_features'] = filtered_df['combined_features'].fillna('')
-    filtered_df['combined_features'] = filtered_df['combined_features'].str.replace(' ', '', regex=True)
+
+    # Remove rows where the combined_features is still empty after filling NaN
+    filtered_df = filtered_df[filtered_df['combined_features'].str.strip() != '']
+
+    # Clean the text: remove spaces between words (optional) and convert to lowercase
+    filtered_df['combined_features'] = filtered_df['combined_features'].str.replace(' ', '', regex=True).str.lower()
+
+    # Check if we have enough data to proceed
+    if filtered_df['combined_features'].empty:
+        st.error("No valid data found after filtering. Please adjust your filters.")
+        st.stop()
 
     # Vectorization and similarity matrix
-    vectorizer = CountVectorizer()
+    vectorizer = CountVectorizer(stop_words='english')  # Remove stop words
     try:
-        matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower())
+        matrix = vectorizer.fit_transform(filtered_df['combined_features'])
         cosine_sim = cosine_similarity(matrix)
 
         def recommend_movie(title, top_n=5):
