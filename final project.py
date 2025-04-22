@@ -12,7 +12,7 @@ st.title("🍿 IMDb Movie Explorer + Recommender System")
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv("IMDb_Data_final.csv")  # Change this if your CSV file has a different name
+    df = pd.read_csv("IMDb_Data_final.csv")
     df.dropna(subset=['Title', 'Director', 'Stars', 'Category'], inplace=True)
     df['combined_features'] = (
         df['Director'].astype(str) + ' ' +
@@ -55,21 +55,21 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
-    # --- FILTERS FOR CATEGORY AND RELEASE YEAR ---
-    st.sidebar.markdown("### 🎛️ Filter Movies")
+    # --- FILTERS ON MAIN PAGE ---
+    st.markdown("### 🎛️ Filter Movies")
 
-    # Category filter
+    # Filter by Category
     category_options = df['Category'].dropna().unique().tolist()
-    selected_category = st.sidebar.selectbox("🎭 Filter by Category", ["All"] + sorted(category_options))
+    selected_category = st.selectbox("🎭 Select a Category:", ["All"] + sorted(category_options))
 
-    # Release Year filter
+    # Filter by Release Year
     if 'ReleaseYear' in df.columns:
         year_options = sorted(df['ReleaseYear'].dropna().unique())
-        selected_year = st.sidebar.selectbox("📅 Filter by Release Year", ["All"] + [str(int(year)) for year in year_options])
+        selected_year = st.selectbox("📅 Select a Release Year:", ["All"] + [str(int(year)) for year in year_options])
     else:
         selected_year = "All"
 
-    # Apply filters to dropdown options
+    # Filter dataset
     filtered_df = df.copy()
     if selected_category != "All":
         filtered_df = filtered_df[filtered_df['Category'] == selected_category]
@@ -89,7 +89,9 @@ elif section == "🎯 Movie Recommendation":
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
         return df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
 
+    # Select a movie from filtered dataset
     movie = st.selectbox("🎬 Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
+
     top_n = st.slider("🔢 Number of recommendations", 1, 10, 5)
 
     if st.button("Recommend 🎬"):
