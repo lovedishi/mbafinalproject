@@ -7,4 +7,4 @@ scikit-surprise
 matplotlib
 seaborn
 plotly
-random
+
