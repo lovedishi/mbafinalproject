@@ -8,7 +8,7 @@ import plotly.express as px
 import random
 
 st.set_page_config(page_title="🎬 IMDb Movie Recommender", layout="wide")
-st.title("🍿 MOVIE MENTOR: THE PERSONAL MOVIE RECOMMENDER")
+st.title("🍿 IMDb Movie Explorer + Recommender System")
 
 # --- Load Data ---
 @st.cache_data
@@ -71,11 +71,14 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
-    # Filter Sidebar
-    category_filter = st.sidebar.selectbox("Filter by Category (Genre):", options=sorted(df['Category'].unique()))  # Single genre dropdown
+    # Filter Sidebar - Category (Genre)
+    category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
+
+    # Filter Sidebar - Year Range (Independent of Genre Filter)
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
 
-    filtered_df = df[(df['Category'] == category_filter) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
+    # Filtered DataFrame (Independent filters)
+    filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
 
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
