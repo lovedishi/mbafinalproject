@@ -6,3 +6,4 @@ scipy
 scikit-surprise
 matplotlib
 seaborn
+plotly
