@@ -72,12 +72,8 @@ elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
     # Filter Sidebar - Category (Genre)
-    category_filter = st.sidebar.multiselect(
-    "Filter by Category (Genre):", 
-    options=sorted(df['Category'].unique()), 
-    default=sorted(df['Category'].unique()), 
-    max_height=20  # Adjust this value as needed
-)
+   category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), max_height=200 default=sorted(df['Category'].unique()))
+
 
     # Filter Sidebar - Year Range (Independent of Genre Filter)
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
