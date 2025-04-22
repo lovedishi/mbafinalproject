@@ -71,12 +71,24 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
-    # Filter Sidebar
-    category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
+    # --- Genre Filter Mode Selection ---
+    filter_mode = st.sidebar.radio("Select Genre Filter Mode", ["Single Genre", "Multiple Genres"])
+
+    # --- Genre Filter based on selected mode ---
+    if filter_mode == "Single Genre":
+        category_filter = st.sidebar.selectbox("Filter by Category (Genre):", options=sorted(df['Category'].unique()), index=0)  # Dropdown for single genre
+    else:  # Multiple genres mode
+        category_filter = st.sidebar.multiselect("Filter by Categories (Genres):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
+
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
 
-    filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
+    # Filter Data based on genre selection
+    if filter_mode == "Single Genre":
+        filtered_df = df[(df['Category'] == category_filter) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
+    else:
+        filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
 
+    # Vectorization and similarity matrix
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
     cosine_sim = cosine_similarity(matrix)
