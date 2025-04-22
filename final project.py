@@ -28,6 +28,32 @@ df = load_data()
 # --- Sidebar Navigation ---
 st.sidebar.title("🔍 Navigation")
 section = st.sidebar.radio("Go to", ["📊 Visualizations", "🎯 Movie Recommendation"])
+# Optional filters: Genre and Language
+st.sidebar.markdown("### 🎯 Optional Filters")
+
+# Genre filter
+if 'Category' in df.columns:
+    genre_options = df['Category'].dropna().unique().tolist()
+    selected_genre = st.sidebar.selectbox("🎭 Filter by Genre", ["All"] + sorted(genre_options))
+else:
+    selected_genre = "All"
+
+# Language filter
+if 'Language' in df.columns:
+    language_options = df['Language'].dropna().unique().tolist()
+    selected_language = st.sidebar.selectbox("🗣️ Filter by Language", ["All"] + sorted(language_options))
+else:
+    selected_language = "All"
+
+# Apply filters to the movie list for the dropdown
+filtered_df = df.copy()
+if selected_genre != "All":
+    filtered_df = filtered_df[filtered_df['Category'] == selected_genre]
+if selected_language != "All":
+    filtered_df = filtered_df[filtered_df['Language'] == selected_language]
+
+# Overwrite movie options (only this line is affected)
+selected_movie = st.sidebar.selectbox("🎬 Select a movie:", filtered_df['Title'].dropna().unique())
 
 # --- Visualizations ---
 if section == "📊 Visualizations":
@@ -52,6 +78,8 @@ if section == "📊 Visualizations":
     st.subheader("📈 IMDb Ratings Distribution")
     fig2 = px.histogram(df, x="IMDb-Rating", nbins=20, title="IMDb Rating Histogram", color_discrete_sequence=["#E45756"])
     st.plotly_chart(fig2)
+
+
 
 # --- Content-Based Recommender ---
 elif section == "🎯 Movie Recommendation":
