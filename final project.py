@@ -71,63 +71,32 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
-    # --- Genre Filter Mode Selection ---
-    filter_mode = st.sidebar.radio("Select Genre Filter Mode", ["Single Genre", "Multiple Genres"])
-
-    # --- Genre Filter based on selected mode ---
-    if filter_mode == "Single Genre":
-        category_filter = st.sidebar.selectbox("Filter by Category (Genre):", options=sorted(df['Category'].unique()), index=0)  # Dropdown for single genre
-    else:  # Multiple genres mode
-        category_filter = st.sidebar.multiselect("Filter by Categories (Genres):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
-
+    # Filter Sidebar
+    category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
 
-    # Filter Data based on genre selection
-    if filter_mode == "Single Genre":
-        filtered_df = df[(df['Category'] == category_filter) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
-    else:
-        filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
+    filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
 
-    # --- Clean and Preprocess combined_features ---
-    filtered_df['combined_features'] = filtered_df['combined_features'].fillna('')
+    vectorizer = CountVectorizer()
+    matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
+    cosine_sim = cosine_similarity(matrix)
 
-    # Remove rows where the combined_features is still empty after filling NaN
-    filtered_df = filtered_df[filtered_df['combined_features'].str.strip() != '']
+    def recommend_movie(title, top_n=5):
+        if title not in filtered_df['Title'].values:
+            return []
+        idx = filtered_df[filtered_df['Title'] == title].index[0]
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
+        return filtered_df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
 
-    # Clean the text: remove spaces between words (optional) and convert to lowercase
-    filtered_df['combined_features'] = filtered_df['combined_features'].str.replace(' ', '', regex=True).str.lower()
+    movie = st.selectbox("Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
+    top_n = st.slider("Number of recommendations", 1, 10, 5)
 
-    # Check if we have enough data to proceed
-    if filtered_df['combined_features'].empty:
-        st.error("No valid data found after filtering. Please adjust your filters.")
-        st.stop()
-
-    # Vectorization and similarity matrix
-    vectorizer = CountVectorizer(stop_words='english')  # Remove stop words
-    try:
-        matrix = vectorizer.fit_transform(filtered_df['combined_features'])
-        cosine_sim = cosine_similarity(matrix)
-
-        def recommend_movie(title, top_n=5):
-            if title not in filtered_df['Title'].values:
-                return []
-            idx = filtered_df[filtered_df['Title'] == title].index[0]
-            sim_scores = list(enumerate(cosine_sim[idx]))
-            sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
-            return filtered_df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
-
-        movie = st.selectbox("Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
-        top_n = st.slider("Number of recommendations", 1, 10, 5)
-
-        if st.button("Recommend 🎬"):
-            results = recommend_movie(movie, top_n)
-            st.success(f"Movies similar to **{movie}**:")
-            for i, rec in enumerate(results, 1):
-                st.markdown(f"**{i}. {rec}**")
-
-    except ValueError as e:
-        st.error(f"An error occurred: {e}. This could be due to issues with the 'combined_features' column data.")
-        st.stop()
+    if st.button("Recommend 🎬"):
+        results = recommend_movie(movie, top_n)
+        st.success(f"Movies similar to **{movie}**:")
+        for i, rec in enumerate(results, 1):
+            st.markdown(f"**{i}. {rec}**")
 
 # --- Movie Comparison ---
 elif section == "📊 Compare Movies":
