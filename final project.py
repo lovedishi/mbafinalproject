@@ -8,7 +8,7 @@ import plotly.express as px
 import random
 
 st.set_page_config(page_title="🎬 IMDb Movie Recommender", layout="wide")
-st.title("🍿 IMDb Movie Explorer + Recommender System")
+st.title("🍿 MOVIE MENTOR: THE PERSONAL MOVIE RECOMMENDER")
 
 # --- Load Data ---
 @st.cache_data
@@ -72,7 +72,7 @@ elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
     # Filter Sidebar - Category (Genre)
-   category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), max_height=200 default=sorted(df['Category'].unique()))
+   category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
 
 
     # Filter Sidebar - Year Range (Independent of Genre Filter)
