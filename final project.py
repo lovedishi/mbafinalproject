@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -57,6 +55,27 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
+    # --- FILTERS FOR CATEGORY AND RELEASE YEAR ---
+    st.sidebar.markdown("### 🎛️ Filter Movies")
+
+    # Category filter
+    category_options = df['Category'].dropna().unique().tolist()
+    selected_category = st.sidebar.selectbox("🎭 Filter by Category", ["All"] + sorted(category_options))
+
+    # Release Year filter
+    if 'ReleaseYear' in df.columns:
+        year_options = sorted(df['ReleaseYear'].dropna().unique())
+        selected_year = st.sidebar.selectbox("📅 Filter by Release Year", ["All"] + [str(int(year)) for year in year_options])
+    else:
+        selected_year = "All"
+
+    # Apply filters to dropdown options
+    filtered_df = df.copy()
+    if selected_category != "All":
+        filtered_df = filtered_df[filtered_df['Category'] == selected_category]
+    if selected_year != "All":
+        filtered_df = filtered_df[filtered_df['ReleaseYear'] == int(selected_year)]
+
     # Vectorization and similarity matrix
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(df['combined_features'].str.lower().str.replace(' ', ''))
@@ -70,8 +89,8 @@ elif section == "🎯 Movie Recommendation":
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
         return df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
 
-    movie = st.selectbox("Choose a movie to get similar recommendations:", df['Title'].unique())
-    top_n = st.slider("Number of recommendations", 1, 10, 5)
+    movie = st.selectbox("🎬 Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
+    top_n = st.slider("🔢 Number of recommendations", 1, 10, 5)
 
     if st.button("Recommend 🎬"):
         results = recommend_movie(movie, top_n)
