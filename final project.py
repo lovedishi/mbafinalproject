@@ -8,7 +8,7 @@ import plotly.express as px
 import random
 
 st.set_page_config(page_title="🎬 IMDb Movie Recommender", layout="wide")
-st.title("🍿 IMDb Movie Explorer + Recommender System")
+st.title("🍿 MOVIE MENTOR: A PERSONALIZED MOVIE RECOMMENDER")
 
 # --- Load Data ---
 @st.cache_data
