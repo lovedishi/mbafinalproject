@@ -129,42 +129,25 @@ elif section == "📊 Compare Movies":
 # --- Random Movie Spinner ---
 elif section == "🎲 Random Spinner":
     st.subheader("🎲 Feeling Lucky? Spin & Get a Random Movie!")
-    
+
     spin_col, result_col = st.columns([1, 2])
-    
+
     with spin_col:
         st.markdown("### 🎡 Movie Spinner")
 
     with result_col:
         placeholder = st.empty()
 
-    # Mood-Based Recommender
-    mood = st.selectbox("What's your mood?", ["Happy", "Sad", "Romantic", "Excited", "Relaxed"])
-    
-    # Map moods to movie categories
-    mood_category_map = {
-        "Happy": "Thriller",
-        "Sad": "Comedy",
-        "Romantic": "Romance",
-        "Excited": "Action",
-        "Relaxed": "Drama"
-    }
+    if st.button("🎯 Spin the Movie Picker"):
+        spinner_anim = ["🔁", "🔃", "🔄"]
+        with st.spinner("Spinning the wheel..."):
+            for _ in range(6):
+                placeholder.markdown(f"### {random.choice(spinner_anim)}")
+                time.sleep(0.5)
 
-    # Recommend movie based on mood
-    if st.button("🎯 Get a Movie Based on Mood"):
-        with st.spinner("Finding the perfect movie..."):
-            time.sleep(1)  # Simulate some loading time
-            
-            # Filter movies based on the mood
-            category_filter = mood_category_map.get(mood)
-            filtered_df = df[df['Category'] == category_filter]
-            
-            # Select a random movie from the filtered category
-            random_movie = filtered_df.sample(1).iloc[0]
-            
-            # Show movie details
-            placeholder.markdown(f"""<div style='text-align:center; font-size:26px; font-weight:bold; color:#2C3E50;'>
-            🎬 <u>Watch this movie:</u><br>
-            <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
-            ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
-            </div>""", unsafe_allow_html=True)
+        random_movie = df.sample(1).iloc[0]
+        placeholder.markdown(f"""<div style='text-align:center; font-size:26px; font-weight:bold; color:#2C3E50;'>
+        🎬 <u>Watch this movie:</u><br>
+        <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
+        ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
+        </div>""", unsafe_allow_html=True)
