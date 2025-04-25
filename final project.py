@@ -8,10 +8,81 @@ import plotly.express as px
 import random
 import time
 
-st.set_page_config(page_title="🎬 IMDb Movie Recommender", layout="wide")
-st.title("🍿 MOVIE MENTOR: A PERSONALIZED MOVIE RECOMMENDER")
+# Language Dictionary for English, Hindi, and Telugu
+language_dict = {
+    "en": {
+        "title": "🍿 MOVIE MENTOR: A PERSONALIZED MOVIE RECOMMENDER",
+        "sidebar_title": "🔍 Navigation",
+        "visualizations": "📊 Visualizations",
+        "movie_recommendation": "🎯 Movie Recommendation",
+        "compare_movies": "📊 Compare Movies",
+        "random_spinner": "🎲 Random Spinner",
+        "choose_movie": "Choose a movie to get similar recommendations:",
+        "recommend": "Recommend 🎬",
+        "mood_label": "What's your mood?",
+        "happy": "Happy",
+        "sad": "Sad",
+        "romantic": "Romantic",
+        "watch_movie": "Watch this movie:",
+        "search_movie": "🔍 Search for a Movie",
+        "search_button": "Search",
+        "no_movie_found": "❌ Oops! No movie found.",
+        "movie_comparison": "📊 Compare Two Movies Side-by-Side",
+        "random_movie": "🎲 Feeling Lucky? Spin & Get a Random Movie!",
+        "spin_button": "🎯 Spin the Movie Picker",
+    },
+    "hi": {
+        "title": "🍿 मूवी मेंटर: एक व्यक्तिगत मूवी अनुशंसा प्रणाली",
+        "sidebar_title": "🔍 नेविगेशन",
+        "visualizations": "📊 विज़ुअलाइजेशन",
+        "movie_recommendation": "🎯 मूवी अनुशंसा",
+        "compare_movies": "📊 मूवी तुलना",
+        "random_spinner": "🎲 रैंडम स्पिनर",
+        "choose_movie": "समान अनुशंसा प्राप्त करने के लिए एक मूवी चुनें:",
+        "recommend": "अनुशंसा करें 🎬",
+        "mood_label": "आपका मूड कैसा है?",
+        "happy": "खुश",
+        "sad": "उदास",
+        "romantic": "रोमांटिक",
+        "watch_movie": "यह मूवी देखें:",
+        "search_movie": "🔍 मूवी खोजें",
+        "search_button": "खोजें",
+        "no_movie_found": "❌ ओह! कोई मूवी नहीं मिली।",
+        "movie_comparison": "📊 दो मूवीज़ की तुलना करें",
+        "random_movie": "🎲 किस्मत आज़माएँ? एक रैंडम मूवी स्पिन करें!",
+        "spin_button": "🎯 मूवी स्पिनर घुमाएं",
+    },
+    "te": {
+        "title": "🍿 మూవీ మెంటార్: ఒక వ్యక్తిగత మూవీ సిఫారసు వ్యవస్థ",
+        "sidebar_title": "🔍 నావిగేషన్",
+        "visualizations": "📊 విజువలైజేషన్స్",
+        "movie_recommendation": "🎯 మూవీ సిఫారసు",
+        "compare_movies": "📊 మూవీస్ పోల్చండి",
+        "random_spinner": "🎲 రాండమ్ స్పిన్నర్",
+        "choose_movie": "సమానమైన సిఫారసు పొందడానికి ఒక సినిమా ఎంచుకోండి:",
+        "recommend": "సిఫారసు చేయండి 🎬",
+        "mood_label": "మీ మూడ్ ఏమిటి?",
+        "happy": "సంతోషంగా",
+        "sad": "ఊహించలేము",
+        "romantic": "ప్రేమిక",
+        "watch_movie": "ఈ సినిమా చూడండి:",
+        "search_movie": "🔍 మూవీ అన్వేషించండి",
+        "search_button": "అన్వేషించండి",
+        "no_movie_found": "❌ ఓహ్! సినిమా లభించలేదు.",
+        "movie_comparison": "📊 రెండు మూవీలను పోల్చండి",
+        "random_movie": "🎲 లక్కీ ఫీల్! ఒక రాండమ్ మూవీ స్ఫిన్ చేయండి!",
+        "spin_button": "🎯 మూవీ స్పిన్నర్ తిప్పండి",
+    }
+}
 
-# --- Load Data ---
+# Language Selection
+selected_language = st.sidebar.selectbox("Select Language", ["English", "हिन्दी", "తెలుగు"])
+
+# Map selected language to dictionary key
+lang_map = {"English": "en", "हिन्दी": "hi", "తెలుగు": "te"}
+lang_code = lang_map[selected_language]
+
+# Load Data
 @st.cache_data
 def load_data():
     df = pd.read_csv("IMDb_Data_final.csv")
@@ -30,11 +101,14 @@ def load_data():
 df = load_data()
 
 # --- Sidebar Navigation ---
-st.sidebar.title("🔍 Navigation")
-section = st.sidebar.radio("Go to", ["📊 Visualizations", "🎯 Movie Recommendation", "📊 Compare Movies", "🎲 Random Spinner"])
+st.sidebar.title(language_dict[lang_code]["sidebar_title"])
+section = st.sidebar.radio("Go to", [language_dict[lang_code]["visualizations"], 
+                                    language_dict[lang_code]["movie_recommendation"], 
+                                    language_dict[lang_code]["compare_movies"],
+                                    language_dict[lang_code]["random_spinner"]])
 
 # --- Visualizations ---
-if section == "📊 Visualizations":
+if section == language_dict[lang_code]["visualizations"]:
     st.subheader("🎥 Top Directors with Most High Score Movies")
     top_directors = df['Director'].value_counts().head(10).reset_index()
     top_directors.columns = ['Director', 'MovieCount']
@@ -66,11 +140,11 @@ if section == "📊 Visualizations":
     tag_option = st.selectbox("Choose a Tag to Filter Movies", df['Tag'].unique())
     tagged_df = df[df['Tag'] == tag_option]
     st.dataframe(tagged_df[['Title', 'IMDb-Rating', 'Tag']])
-    st.download_button("📥 Download Filtered Movies", data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
+    st.download_button(language_dict[lang_code]["search_button"], data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
 
 # --- Movie Recommendation ---
-elif section == "🎯 Movie Recommendation":
-    st.subheader("🎯 Content-Based Movie Recommendation System")
+elif section == language_dict[lang_code]["movie_recommendation"]:
+    st.subheader(language_dict[lang_code]["movie_recommendation"])
 
     # Filter Sidebar - Category (Genre)
     category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
@@ -93,30 +167,18 @@ elif section == "🎯 Movie Recommendation":
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
         return filtered_df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
 
-    movie = st.selectbox("Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
+    movie = st.selectbox(language_dict[lang_code]["choose_movie"], filtered_df['Title'].unique())
     top_n = st.slider("Number of recommendations", 1, 10, 5)
 
-    if st.button("Recommend 🎬"):
+    if st.button(language_dict[lang_code]["recommend"]):
         results = recommend_movie(movie, top_n)
         st.success(f"Movies similar to **{movie}**:")
         for i, rec in enumerate(results, 1):
             st.markdown(f"**{i}. {rec}**")
 
-    # Search Bar for Movie Information
-    st.markdown("---")
-    st.subheader("🔍 Search for a Movie")
-    search_input = st.text_input("Enter movie name to get details")
-    if search_input:
-        matched = df[df['Title'].str.lower() == search_input.lower()]
-        if not matched.empty:
-            st.success("✅ Movie Found:")
-            st.write(matched.T)
-        else:
-            st.warning("❌ Oops! No movie found.")
-
 # --- Movie Comparison ---
-elif section == "📊 Compare Movies":
-    st.subheader("📊 Compare Two Movies Side-by-Side")
+elif section == language_dict[lang_code]["compare_movies"]:
+    st.subheader(language_dict[lang_code]["movie_comparison"])
     col1, col2 = st.columns(2)
     with col1:
         movie1 = st.selectbox("🎥 Select Movie 1", df['Title'], key="movie1")
@@ -127,8 +189,8 @@ elif section == "📊 Compare Movies":
     st.table(compare_df[['Title', 'IMDb-Rating', 'Director', 'Category', 'ReleaseYear', 'Duration']])
 
 # --- Random Movie Spinner ---
-elif section == "🎲 Random Spinner":
-    st.subheader("🎲 Feeling Lucky? Spin & Get a Random Movie!")
+elif section == language_dict[lang_code]["random_spinner"]:
+    st.subheader(language_dict[lang_code]["random_movie"])
 
     spin_col, result_col = st.columns([1, 2])
 
@@ -138,7 +200,7 @@ elif section == "🎲 Random Spinner":
     with result_col:
         placeholder = st.empty()
 
-    if st.button("🎯 Spin the Movie Picker"):
+    if st.button(language_dict[lang_code]["spin_button"]):
         spinner_anim = ["🔁", "🔃", "🔄"]
         with st.spinner("Spinning the wheel..."):
             for _ in range(6):
@@ -147,7 +209,7 @@ elif section == "🎲 Random Spinner":
 
         random_movie = df.sample(1).iloc[0]
         placeholder.markdown(f"""<div style='text-align:center; font-size:26px; font-weight:bold; color:#2C3E50;'>
-        🎬 <u>Watch this movie:</u><br>
+        🎬 <u>{language_dict[lang_code]['watch_movie']}</u><br>
         <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
         ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
         </div>""", unsafe_allow_html=True)
