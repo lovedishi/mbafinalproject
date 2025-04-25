@@ -6,6 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import plotly.express as px
 import random
+import time
 
 st.set_page_config(page_title="🎬 IMDb Movie Recommender", layout="wide")
 st.title("🍿 MOVIE MENTOR: A PERSONALIZED MOVIE RECOMMENDER")
@@ -71,18 +72,14 @@ if section == "📊 Visualizations":
 elif section == "🎯 Movie Recommendation":
     st.subheader("🎯 Content-Based Movie Recommendation System")
 
-    # Filter Sidebar
+    # Filter Sidebar - Category (Genre)
     category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
+
+    # Filter Sidebar - Year Range (Independent of Genre Filter)
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
 
+    # Filtered DataFrame (Independent filters)
     filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
-
-    # Search bar for movie titles
-    search_text = st.text_input("🔎 Search Movie Title:")
-    filtered_titles = filtered_df[filtered_df['Title'].str.contains(search_text, case=False, na=False)]['Title'].unique()
-
-    movie = st.selectbox("🎬 Choose a movie to get similar recommendations:", filtered_titles)
-    top_n = st.slider("Number of recommendations", 1, 10, 5)
 
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
@@ -94,16 +91,28 @@ elif section == "🎯 Movie Recommendation":
         idx = filtered_df[filtered_df['Title'] == title].index[0]
         sim_scores = list(enumerate(cosine_sim[idx]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
-        return filtered_df.iloc[[i[0] for i in sim_scores]]
+        return filtered_df.iloc[[i[0] for i in sim_scores]]['Title'].tolist()
 
-    if st.button("🎯 Recommend"):
-        results_df = recommend_movie(movie, top_n)
-        if not results_df.empty:
-            st.success(f"Movies similar to **{movie}**:")
-            for i, row in results_df.iterrows():
-                st.markdown(f"**{row['Title']}** - 🎬 {row['Category']} | ⭐ {row['IMDb-Rating']} | 📅 {row['ReleaseYear']}")
+    movie = st.selectbox("Choose a movie to get similar recommendations:", filtered_df['Title'].unique())
+    top_n = st.slider("Number of recommendations", 1, 10, 5)
+
+    if st.button("Recommend 🎬"):
+        results = recommend_movie(movie, top_n)
+        st.success(f"Movies similar to **{movie}**:")
+        for i, rec in enumerate(results, 1):
+            st.markdown(f"**{i}. {rec}**")
+
+    # Search Bar for Movie Information
+    st.markdown("---")
+    st.subheader("🔍 Search for a Movie")
+    search_input = st.text_input("Enter movie name to get details")
+    if search_input:
+        matched = df[df['Title'].str.lower() == search_input.lower()]
+        if not matched.empty:
+            st.success("✅ Movie Found:")
+            st.write(matched.T)
         else:
-            st.warning("No recommendations found. Try a different movie.")
+            st.warning("❌ Oops! No movie found.")
 
 # --- Movie Comparison ---
 elif section == "📊 Compare Movies":
@@ -117,9 +126,28 @@ elif section == "📊 Compare Movies":
     compare_df = df[df['Title'].isin([movie1, movie2])]
     st.table(compare_df[['Title', 'IMDb-Rating', 'Director', 'Category', 'ReleaseYear', 'Duration']])
 
-# --- Random Spinner ---
+# --- Random Movie Spinner ---
 elif section == "🎲 Random Spinner":
     st.subheader("🎲 Feeling Lucky? Spin & Get a Random Movie!")
+
+    spin_col, result_col = st.columns([1, 2])
+
+    with spin_col:
+        st.markdown("### 🎡 Movie Spinner")
+
+    with result_col:
+        placeholder = st.empty()
+
     if st.button("🎯 Spin the Movie Picker"):
+        spinner_anim = ["🔁", "🔃", "🔄"]
+        with st.spinner("Spinning the wheel..."):
+            for _ in range(6):
+                placeholder.markdown(f"### {random.choice(spinner_anim)}")
+                time.sleep(0.5)
+
         random_movie = df.sample(1).iloc[0]
-        st.success(f"🍿 Watch: **{random_movie['Title']}** ({random_movie['ReleaseYear']}) - Rated: {random_movie['IMDb-Rating']}")
+        placeholder.markdown(f"""<div style='text-align:center; font-size:26px; font-weight:bold; color:#2C3E50;'>
+        🎬 <u>Watch this movie:</u><br>
+        <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
+        ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
+        </div>""", unsafe_allow_html=True)
