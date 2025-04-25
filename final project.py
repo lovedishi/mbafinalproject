@@ -8,7 +8,7 @@ import plotly.express as px
 import random
 import time
 
-# Language Dictionary
+# Language Dictionary for English, Hindi, and Telugu
 language_dict = {
     "en": {
         "title": "🍿 MOVIE MENTOR: A PERSONALIZED MOVIE RECOMMENDER",
@@ -85,7 +85,11 @@ lang_code = lang_map[selected_language]
 def load_data():
     df = pd.read_csv("IMDb_Data_final.csv")
     df.dropna(subset=['Title', 'Director', 'Stars', 'Category'], inplace=True)
-    df['combined_features'] = df['Director'].astype(str) + ' ' + df['Stars'].astype(str) + ' ' + df['Category'].astype(str)
+    df['combined_features'] = (
+        df['Director'].astype(str) + ' ' +
+        df['Stars'].astype(str) + ' ' +
+        df['Category'].astype(str)
+    )
     df['Tag'] = df.apply(lambda row: 
                          '🎖️ Top IMDb-rated' if row['IMDb-Rating'] >= 8.5 else
                          '💎 Hidden Gem' if row['IMDb-Rating'] > 7.5 and row['ReleaseYear'] < 2010 else
@@ -94,22 +98,22 @@ def load_data():
 
 df = load_data()
 
-# --- Sidebar Navigation ---
+# Sidebar
 st.sidebar.title(language_dict[lang_code]["sidebar_title"])
 section = st.sidebar.radio("Go to", [language_dict[lang_code]["visualizations"], 
-                                     language_dict[lang_code]["movie_recommendation"], 
-                                     language_dict[lang_code]["compare_movies"],
-                                     language_dict[lang_code]["random_spinner"]])
+                                    language_dict[lang_code]["movie_recommendation"], 
+                                    language_dict[lang_code]["compare_movies"],
+                                    language_dict[lang_code]["random_spinner"]])
 
-# --- Visualizations Section ---
+# Visualizations
 if section == language_dict[lang_code]["visualizations"]:
     st.subheader("🎥 Top Directors with Most High Score Movies")
     top_directors = df['Director'].value_counts().head(10).reset_index()
     top_directors.columns = ['Director', 'MovieCount']
+
     fig = px.bar(top_directors, x='Director', y='MovieCount', color='Director',
-                 title="Top 10 Directors with Most High-Score Movies",
-                 text_auto=True, width=1000, height=600,
-                 color_discrete_sequence=px.colors.qualitative.Safe)
+                 title="Top 10 Directors with Most High-Score Movies", text_auto=True,
+                 width=1000, height=600, color_discrete_sequence=px.colors.qualitative.Safe)
     st.plotly_chart(fig)
 
     st.subheader("📈 IMDb Ratings Distribution")
@@ -126,29 +130,16 @@ if section == language_dict[lang_code]["visualizations"]:
     tag_option = st.selectbox("Choose a Tag to Filter Movies", df['Tag'].unique())
     tagged_df = df[df['Tag'] == tag_option]
     st.dataframe(tagged_df[['Title', 'IMDb-Rating', 'Tag']])
-    st.download_button(language_dict[lang_code]["search_button"], data=tagged_df.to_csv(index=False),
-                       file_name="tagged_movies.csv", mime="text/csv")
+    st.download_button(language_dict[lang_code]["search_button"], data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
 
-# --- Recommendation Section ---
+# Movie Recommendation
 elif section == language_dict[lang_code]["movie_recommendation"]:
     st.subheader(language_dict[lang_code]["movie_recommendation"])
 
-    # Search Bar for Movie Details
-    search_query = st.text_input(language_dict[lang_code]["search_movie"])
-    if st.button(language_dict[lang_code]["search_button"]):
-        search_result = df[df['Title'].str.lower().str.contains(search_query.strip().lower())]
-        if not search_result.empty:
-            st.success(f"🔎 {len(search_result)} result(s) found:")
-            st.dataframe(search_result[['Title', 'IMDb-Rating', 'Director', 'Stars', 'Category', 'ReleaseYear', 'Duration']])
-        else:
-            st.error(language_dict[lang_code]["no_movie_found"])
-
-    # Filters
-    category_filter = st.sidebar.multiselect("Filter by Category (Genre):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
+    # Year Filter only
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
-    filtered_df = df[(df['Category'].isin(category_filter)) & (df['ReleaseYear'].between(year_filter[0], year_filter[1]))]
+    filtered_df = df[df['ReleaseYear'].between(year_filter[0], year_filter[1])]
 
-    # Recommendation Logic
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
     cosine_sim = cosine_similarity(matrix)
@@ -170,7 +161,16 @@ elif section == language_dict[lang_code]["movie_recommendation"]:
         for i, rec in enumerate(results, 1):
             st.markdown(f"**{i}. {rec}**")
 
-# --- Compare Movies ---
+    st.subheader(language_dict[lang_code]["search_movie"])
+    search_query = st.text_input(language_dict[lang_code]["search_movie"])
+    if st.button(language_dict[lang_code]["search_button"]):
+        result = df[df['Title'].str.lower() == search_query.lower()]
+        if not result.empty:
+            st.write(result[['Title', 'Director', 'Stars', 'IMDb-Rating', 'Category', 'Duration', 'ReleaseYear']])
+        else:
+            st.warning(language_dict[lang_code]["no_movie_found"])
+
+# Movie Comparison
 elif section == language_dict[lang_code]["compare_movies"]:
     st.subheader(language_dict[lang_code]["movie_comparison"])
     col1, col2 = st.columns(2)
@@ -182,20 +182,23 @@ elif section == language_dict[lang_code]["compare_movies"]:
     compare_df = df[df['Title'].isin([movie1, movie2])]
     st.table(compare_df[['Title', 'IMDb-Rating', 'Director', 'Category', 'ReleaseYear', 'Duration']])
 
-# --- Random Spinner ---
+# Random Movie Spinner
 elif section == language_dict[lang_code]["random_spinner"]:
     st.subheader(language_dict[lang_code]["random_movie"])
     spin_col, result_col = st.columns([1, 2])
+
     with spin_col:
         st.markdown("### 🎡 Movie Spinner")
     with result_col:
         placeholder = st.empty()
+
     if st.button(language_dict[lang_code]["spin_button"]):
         spinner_anim = ["🔁", "🔃", "🔄"]
         with st.spinner("Spinning the wheel..."):
             for _ in range(6):
                 placeholder.markdown(f"### {random.choice(spinner_anim)}")
                 time.sleep(0.5)
+
         random_movie = df.sample(1).iloc[0]
         placeholder.markdown(f"""<div style='text-align:center; font-size:26px; font-weight:bold; color:#2C3E50;'>
         🎬 <u>{language_dict[lang_code]['watch_movie']}</u><br>
