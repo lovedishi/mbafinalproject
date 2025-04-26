@@ -17,6 +17,7 @@ language_dict = {
         "movie_recommendation": "🎯 Movie Recommendation",
         "compare_movies": "📊 Compare Movies",
         "random_spinner": "🎲 Random Spinner",
+        "filter_by_genre": "🎞️ Filter by Genre",
         "choose_movie": "Choose a movie to get similar recommendations:",
         "recommend": "Recommend 🎬",
         "mood_label": "What's your mood?",
@@ -39,6 +40,7 @@ language_dict = {
         "movie_recommendation": "🎯 मूवी अनुशंसा",
         "compare_movies": "📊 मूवी तुलना",
         "random_spinner": "🎲 रैंडम स्पिनर",
+        "filter_by_genre": "🎞️ शैली के अनुसार फ़िल्टर करें",
         "choose_movie": "समान अनुशंसा प्राप्त करने के लिए एक मूवी चुनें:",
         "recommend": "अनुशंसा करें 🎬",
         "mood_label": "आपका मूड कैसा है?",
@@ -61,6 +63,7 @@ language_dict = {
         "movie_recommendation": "🎯 మూవీ సిఫారసు",
         "compare_movies": "📊 మూవీస్ పోల్చండి",
         "random_spinner": "🎲 రాండమ్ స్పిన్నర్",
+        "filter_by_genre": "🎞️ శైలిని ఆధారంగా వడపోత",
         "choose_movie": "సమానమైన సిఫారసు పొందడానికి ఒక సినిమా ఎంచుకోండి:",
         "recommend": "సిఫారసు చేయండి 🎬",
         "mood_label": "మీ మూడ్ ఏమిటి?",
@@ -106,10 +109,13 @@ df = load_data()
 
 # Sidebar Navigation
 st.sidebar.title(language_dict[lang_code]["sidebar_title"])
-section = st.sidebar.radio("Go to", [language_dict[lang_code]["visualizations"], 
-                                    language_dict[lang_code]["movie_recommendation"], 
-                                    language_dict[lang_code]["compare_movies"],
-                                    language_dict[lang_code]["random_spinner"]])
+section = st.sidebar.radio("Go to", [
+    language_dict[lang_code]["visualizations"], 
+    language_dict[lang_code]["movie_recommendation"], 
+    language_dict[lang_code]["compare_movies"],
+    language_dict[lang_code]["random_spinner"],
+    language_dict[lang_code]["filter_by_genre"]    # <-- New Section added here
+])
 
 # Visualizations
 if section == language_dict[lang_code]["visualizations"]:
@@ -136,7 +142,6 @@ if section == language_dict[lang_code]["visualizations"]:
     tagged_df = df[df['Tag'] == tag_option]
     st.dataframe(tagged_df[['Title', 'IMDb-Rating', 'Tag']])
     
-    # ✅ Download button for filtered movies
     st.download_button(
         label=language_dict[lang_code]["download_button"],
         data=tagged_df.to_csv(index=False),
@@ -213,4 +218,20 @@ elif section == language_dict[lang_code]["random_spinner"]:
         🎬 <u>{language_dict[lang_code]['watch_movie']}</u><br>
         <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
         ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
-        </div>""", unsafe_allow_html=True) 
+        </div>""", unsafe_allow_html=True)
+
+# 🎞️ Filter by Genre (NEW Section)
+elif section == language_dict[lang_code]["filter_by_genre"]:
+    st.subheader("🎞️ Browse Top Movies by Genre")
+    
+    genres = sorted(df['Category'].dropna().unique())
+    selected_genre = st.selectbox("🎬 Select a Genre", genres)
+
+    if selected_genre:
+        top_genre_movies = df[df['Category'] == selected_genre].sort_values(by='IMDb-Rating', ascending=False).head(10)
+        
+        if not top_genre_movies.empty:
+            st.write(f"🎥 **Top 10 Movies in {selected_genre} Genre** (Sorted by IMDb Rating):")
+            st.dataframe(top_genre_movies[['Title', 'IMDb-Rating', 'Director', 'Stars', 'ReleaseYear']])
+        else:
+            st.warning("😕 No movies found for the selected genre!")
