@@ -30,6 +30,7 @@ language_dict = {
         "movie_comparison": "📊 Compare Two Movies Side-by-Side",
         "random_movie": "🎲 Feeling Lucky? Spin & Get a Random Movie!",
         "spin_button": "🎯 Spin the Movie Picker",
+        "download_button": "📥 Download CSV",
     },
     "hi": {
         "title": "🍿 मूवी मेंटर: एक व्यक्तिगत मूवी अनुशंसा प्रणाली",
@@ -51,6 +52,7 @@ language_dict = {
         "movie_comparison": "📊 दो मूवीज़ की तुलना करें",
         "random_movie": "🎲 किस्मत आज़माएँ? एक रैंडम मूवी स्पिन करें!",
         "spin_button": "🎯 मूवी स्पिनर घुमाएं",
+        "download_button": "📥 CSV डाउनलोड करें",
     },
     "te": {
         "title": "🍿 మూవీ మెంటార్: ఒక వ్యక్తిగత మూవీ సిఫారసు వ్యవస్థ",
@@ -72,6 +74,7 @@ language_dict = {
         "movie_comparison": "📊 రెండు మూవీలను పోల్చండి",
         "random_movie": "🎲 లక్కీ ఫీల్! ఒక రాండమ్ మూవీ స్ఫిన్ చేయండి!",
         "spin_button": "🎯 మూవీ స్పిన్నర్ తిప్పండి",
+        "download_button": "📥 CSV డౌన్‌లోడ్ చేయండి",
     }
 }
 
@@ -130,7 +133,7 @@ if section == language_dict[lang_code]["visualizations"]:
     tag_option = st.selectbox("Choose a Tag to Filter Movies", df['Tag'].unique())
     tagged_df = df[df['Tag'] == tag_option]
     st.dataframe(tagged_df[['Title', 'IMDb-Rating', 'Tag']])
-    st.download_button(language_dict[lang_code]["search_button"], data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
+    st.download_button(language_dict[lang_code]["download_button"], data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
 
 # Movie Recommendation
 elif section == language_dict[lang_code]["movie_recommendation"]:
