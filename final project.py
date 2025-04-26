@@ -30,7 +30,7 @@ language_dict = {
         "movie_comparison": "📊 Compare Two Movies Side-by-Side",
         "random_movie": "🎲 Feeling Lucky? Spin & Get a Random Movie!",
         "spin_button": "🎯 Spin the Movie Picker",
-        "download_button": "📥 Download CSV",
+        "download_button": "⬇️ Download Filtered Movies",
     },
     "hi": {
         "title": "🍿 मूवी मेंटर: एक व्यक्तिगत मूवी अनुशंसा प्रणाली",
@@ -52,7 +52,7 @@ language_dict = {
         "movie_comparison": "📊 दो मूवीज़ की तुलना करें",
         "random_movie": "🎲 किस्मत आज़माएँ? एक रैंडम मूवी स्पिन करें!",
         "spin_button": "🎯 मूवी स्पिनर घुमाएं",
-        "download_button": "📥 CSV डाउनलोड करें",
+        "download_button": "⬇️ फ़िल्टर की गई मूवी डाउनलोड करें",
     },
     "te": {
         "title": "🍿 మూవీ మెంటార్: ఒక వ్యక్తిగత మూవీ సిఫారసు వ్యవస్థ",
@@ -74,7 +74,7 @@ language_dict = {
         "movie_comparison": "📊 రెండు మూవీలను పోల్చండి",
         "random_movie": "🎲 లక్కీ ఫీల్! ఒక రాండమ్ మూవీ స్ఫిన్ చేయండి!",
         "spin_button": "🎯 మూవీ స్పిన్నర్ తిప్పండి",
-        "download_button": "📥 CSV డౌన్‌లోడ్ చేయండి",
+        "download_button": "⬇️ ఫిల్టర్ చేసిన సినిమాను డౌన్‌లోడ్ చేయండి",
     }
 }
 
@@ -82,6 +82,9 @@ language_dict = {
 selected_language = st.sidebar.selectbox("Select Language", ["English", "हिन्दी", "తెలుగు"])
 lang_map = {"English": "en", "हिन्दी": "hi", "తెలుగు": "te"}
 lang_code = lang_map[selected_language]
+
+# ✅ Display Title
+st.title(language_dict[lang_code]["title"])
 
 # Load Data
 @st.cache_data
@@ -101,7 +104,7 @@ def load_data():
 
 df = load_data()
 
-# Sidebar
+# Sidebar Navigation
 st.sidebar.title(language_dict[lang_code]["sidebar_title"])
 section = st.sidebar.radio("Go to", [language_dict[lang_code]["visualizations"], 
                                     language_dict[lang_code]["movie_recommendation"], 
@@ -113,7 +116,6 @@ if section == language_dict[lang_code]["visualizations"]:
     st.subheader("🎥 Top Directors with Most High Score Movies")
     top_directors = df['Director'].value_counts().head(10).reset_index()
     top_directors.columns = ['Director', 'MovieCount']
-
     fig = px.bar(top_directors, x='Director', y='MovieCount', color='Director',
                  title="Top 10 Directors with Most High-Score Movies", text_auto=True,
                  width=1000, height=600, color_discrete_sequence=px.colors.qualitative.Safe)
@@ -133,16 +135,20 @@ if section == language_dict[lang_code]["visualizations"]:
     tag_option = st.selectbox("Choose a Tag to Filter Movies", df['Tag'].unique())
     tagged_df = df[df['Tag'] == tag_option]
     st.dataframe(tagged_df[['Title', 'IMDb-Rating', 'Tag']])
-    st.download_button(language_dict[lang_code]["download_button"], data=tagged_df.to_csv(index=False), file_name="tagged_movies.csv", mime="text/csv")
+    
+    # ✅ Download button for filtered movies
+    st.download_button(
+        label=language_dict[lang_code]["download_button"],
+        data=tagged_df.to_csv(index=False),
+        file_name="filtered_movies.csv",
+        mime="text/csv"
+    )
 
 # Movie Recommendation
 elif section == language_dict[lang_code]["movie_recommendation"]:
     st.subheader(language_dict[lang_code]["movie_recommendation"])
-
-    # Year Filter only
     year_filter = st.sidebar.slider("Select Release Year Range:", int(df['ReleaseYear'].min()), int(df['ReleaseYear'].max()), (2000, 2023))
     filtered_df = df[df['ReleaseYear'].between(year_filter[0], year_filter[1])]
-
     vectorizer = CountVectorizer()
     matrix = vectorizer.fit_transform(filtered_df['combined_features'].str.lower().str.replace(' ', ''))
     cosine_sim = cosine_similarity(matrix)
@@ -185,7 +191,7 @@ elif section == language_dict[lang_code]["compare_movies"]:
     compare_df = df[df['Title'].isin([movie1, movie2])]
     st.table(compare_df[['Title', 'IMDb-Rating', 'Director', 'Category', 'ReleaseYear', 'Duration']])
 
-# Random Movie Spinner
+# Random Spinner
 elif section == language_dict[lang_code]["random_spinner"]:
     st.subheader(language_dict[lang_code]["random_movie"])
     spin_col, result_col = st.columns([1, 2])
