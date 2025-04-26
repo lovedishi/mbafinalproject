@@ -213,4 +213,4 @@ elif section == language_dict[lang_code]["random_spinner"]:
         🎬 <u>{language_dict[lang_code]['watch_movie']}</u><br>
         <span style='color:#E74C3C;'>{random_movie['Title']}</span><br>
         ⭐ IMDb: {random_movie['IMDb-Rating']} | 📅 {random_movie['ReleaseYear']} | 🎭 {random_movie['Category']}
-        </div>""", unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True) 
